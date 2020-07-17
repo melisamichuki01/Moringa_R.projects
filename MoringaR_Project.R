@@ -1,9 +1,10 @@
 # Behaviour analysis
 # Importing necesary packages
-library("data.table")
-library(tidyverse)
-library(lubridate)
-
+library(data.table)# File reader
+library(tidyverse)# Enables us to carry out data cleaning
+library(vioplot)# Enables us to plot violin plots from our data
+library(DataExplorer)# Enables us to carry our EDA
+library(ggcorrplot)# Enables us to plot a correlation matrix
 
 # Loading dataset 
 
@@ -52,20 +53,19 @@ addf_date
 # Check for outliers
 
 # Violin Plots
-library(vioplot)
 x1 <- addf$`Daily Time Spent on Site`[addf$`Clicked on Ad`==0]
 x2 <- addf$`Daily Time Spent on Site`[addf$`Clicked on Ad`==1]
 vioplot(x1, x2,names=c("Clicked on Ad", "Did not click on add"),
         col="blue")
-title("Violin Plots of daily time spent on site")
+title("Violin Plots of daily time spent on site against clicked or not clicked ad")
 
 
 # Box Plots
 x3 <- addf$Age[addf$`Clicked on Ad`==0]
 x4 <- addf$Age[addf$`Clicked on Ad`==1]
-boxplot(x3, x4,names=c("Clicked on Ad", "Did not click on add"),
+boxplot(x3, x4,names=c("Did not click on ad","Clicked on Ad"),
         col="gold")
-title("Box Plots of Age range ")
+title("Box Plots of Age range against clicked or not clicked ad ")
 
 # Listing out outliers
 boxplot.stats(x3)$out
@@ -119,7 +119,7 @@ timespent_hist= hist(addf$`Daily Time Spent on Site`,
          col = "pink"
 )
 
-library(DataExplorer)
+
 plot_density(addf)
 plot_histogram(addf)
 # Frequency distribution of gender
@@ -157,7 +157,7 @@ cor(timespent_c,internetusage_c)
 pairs(data=addf,
       ~`Daily Time Spent on Site`+ `Daily Internet Usage` + Age)
 
-library(ggcorrplot)
+
 corr = round(cor(select_if(addf, is.numeric)), 4)
 ggcorrplot(corr, hc.order = T, ggtheme = ggplot2::theme_grey,
            colors = c("cyan", "peachpuff4", "pink"), lab = T)
