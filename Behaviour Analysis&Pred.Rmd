@@ -1,0 +1,394 @@
+---
+title: "Behaviour analysis and prediction"
+author: "Melisa"
+date: "19 July 2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+# Business Understanding
+
+Cryptography is the art of writing or solving code.
+A Kenyan entrepreneur has created an online cryptography course and would want to advertise it on her blog. She currently targets audiences originating from various countries. In the past, she ran ads to advertise a related course on the same blog and collected data in the process. 
+She would now like to employ your services as a Data Science Consultant to help her identify which individuals are most likely to click on her ads. 
+
+# Business objectives
+The main objective of this study is to enable our client to identify which individuals are most likely to click on her ads. 
+
+
+# Assessing the situation at hand
+## Resources inventory
+### Datasets 
+
+Dataset url<-http://bit.ly/IPAdvertisingData
+
+Software (Github,R)
+
+# Assumptions 
+The data is up to date and relevant.
+# Constraints
+There are no constraints currently
+
+
+# Importing necesary packages
+```{r}
+library(data.table)# File reader
+library(tidyverse)# Enables us to carry out data cleaning
+library(vioplot)# Enables us to plot violin plots from our data
+library(DataExplorer)# Enables us to carry our EDA
+library(ggcorrplot)# Enables us to plot a correlation matrix
+```
+
+# Loading our dataset
+```{r}
+addf <- fread('http://bit.ly/IPAdvertisingData')
+```
+
+# Preview of the head of our dataset
+```{r}
+head(addf)
+```
+
+# Preview of the tail of the dataset
+```{r}
+tail(addf)
+```
+
+# Summary of the advertising dataset
+```{r}
+summary(addf)
+```
+
+# Summary of the advertising dataset information
+```{r}
+names(addf)
+```
+
+#Class of the advertising dataset
+```{r}
+class(addf)
+```
+
+# Check for duplicates
+```{r}
+duplicated_addf <- addf[duplicated(addf),]
+duplicated_addf
+```
+There are no duplicates in our dataset
+
+# Check for unique values
+```{r}
+unique_addf <- unique(addf)
+unique_addf
+```
+From the above observation,the dataset has no unique values.
+
+# Check for null values
+```{r}
+null_addf <- is.null(addf)
+null_addf
+```
+
+This show that there are no null values in our dataset.
+
+# Check for outliers
+
+```{r}
+x1 <- addf$`Daily Time Spent on Site`[addf$`Clicked on Ad`==0]
+x2 <- addf$`Daily Time Spent on Site`[addf$`Clicked on Ad`==1]
+vioplot(x1, x2,names=c("Clicked on Ad", "Did not click on add"),
+        col="blue")
+title("Violin Plots of daily time spent on site against clicked or not clicked ad")
+```
+
+# Box Plots
+```{r}
+x3 <- addf$Age[addf$`Clicked on Ad`==0]
+x4 <- addf$Age[addf$`Clicked on Ad`==1]
+boxplot(x3, x4,names=c("Did not click on ad","Clicked on Ad"),
+        col="gold")
+title("Box Plots of Age range against clicked or not clicked ad ")
+```
+Outliers are present in the 'did not click on ad' category
+
+
+# Summary of outliers of the ages of those who did not click on ad.
+```{r}
+boxplot.stats(x3)$out
+```
+
+# Univariate analysis
+# Mininimum age that accessed the ad
+```{r}
+minAge <- min(addf$Age)
+minAge
+```
+
+# Maximum age
+```{r}
+maxAge <- max(addf$Age)
+maxAge
+```
+The youngest person that accessed the ad was 19yrs with the oldest being 61yrs
+
+# Mean of Daily Internet Usage
+```{r}
+mean_addf <- mean(addf$`Daily Internet Usage`)
+mean_addf
+```
+# Mean of time spent on the site
+```{r}
+mean_addf1<- mean(addf$`Daily Time Spent on Site`)
+mean_addf1
+```
+The mean amount of min of daily internet usage is 180 while the mean of the daily time spent on the site is 65 min
+
+# Quartiles of Internet usage
+
+```{r}
+addf_InternetUsage_quantile <- quantile(addf$`Daily Internet Usage`)
+addf_InternetUsage_quantile
+```
+
+# Quartiles of Time spent on a site
+```{r}
+addf_TimeSpent_quantile <- quantile(addf$`Daily Time Spent on Site`)
+addf_TimeSpent_quantile
+```
+
+# Standard deviation of Time spent on a site
+```{r}
+addf_TimeSpent_sd <- sd(addf$`Daily Time Spent on Site`)
+addf_TimeSpent_sd
+```
+
+# Standard deviation of Internet usage
+```{r}
+addf_InternetUsage_sd <- sd(addf$`Daily Internet Usage`)
+addf_InternetUsage_sd
+```
+
+# Histogram
+```{r}
+plot_histogram(addf)
+```
+
+```{r}
+hist(addf$Age,col="purple")
+```
+Most people involved in this study were between the age of 30-40 yrs
+
+```{r}
+timespent_hist= hist(addf$`Daily Time Spent on Site`,
+                     main = "Daily time Spent on Site",
+                     xlab = "Daily time Spent on Site",
+                     col = "pink"
+)
+```
+From this plot,we can see that most people spent approx 75-80 mins on the site
+
+# Frequency
+```{r}
+gender <- addf$Male
+gender_freq <- table(gender)
+barplot(gender_freq,
+        col = "green")
+title("Frequency distribution of gender,0=Female,1=Male")
+```
+More females were involved in this study than males
+
+# Barplots
+
+# Comparison by gender on number of clicks
+
+```{r}
+clicks = table(addf$Male,addf$`Clicked on Ad`)
+barplot(clicks,main="No of clicks on Ad per gender,0=Female,1=male",xlab="Ad clicks",col=c("white","cyan"),beside=TRUE)
+legends = rownames(clicks)
+```
+Females tend to click on ads more than men.
+
+# Comparison by age on number of clicks
+```{r}
+clicks1 = table(addf$Age,addf$`Clicked on Ad`)
+barplot(clicks1,main="No of clicks on Ad by age,)=Not clicked Ad,1=Clicked Ad",xlab="Ad clicks",col=c("white","purple"),beside = TRUE)
+legends = rownames(clicks1)
+```
+The group that clicked on the ads more frequently were between the age of 36 to 47 yrs 
+
+# Bivariate analysis
+## Correlation between two varables
+
+Correlation is a normalized measurement of how the two are linearly related
+```{r}
+timespent_c <- addf$`Daily Time Spent on Site`
+internetusage_c <- addf$`Daily Internet Usage`
+
+cor(timespent_c,internetusage_c)
+```
+This shows that time spent and internet usage are highly correlated
+
+
+
+## Covariance
+Covariance is a number that reflects the degree to which two variable vary together
+
+```{r}
+cov(timespent_c,internetusage_c)
+```
+
+We have a high covariance of 360 which indicates a strong relationship between the variables
+
+## Scatterplots
+
+```{r}
+plot(timespent_c,internetusage_c, xlab="Daily time spent on site", ylab="Daily Internet Usage")
+```
+
+
+```{r}
+names(addf)
+```
+
+
+
+
+# Multivariate analysis
+
+## Correlation matrix
+```{r}
+library(ggcorrplot)
+corr = round(cor(select_if(addf, is.numeric)), 4)
+ggcorrplot(corr, hc.order = T, ggtheme = ggplot2::theme_grey,
+           colors = c("cyan", "blue", "maroon"), lab = T)
+```         
+
+
+We have a high covariance of 360 which indicates a strong relationship between the variables
+
+
+```{r}
+pairs(data=addf,
+      ~`Daily Time Spent on Site`+ `Daily Internet Usage` + Age)
+```
+
+
+
+# Modelling
+
+## Random Forest
+
+```{r}
+addf_d = addf[,c(1,2,3,4,7,10)]
+colnames(addf_d) = tolower(str_replace_all(colnames(addf_d),c(' ' = '_')))
+head(addf_d)
+```
+
+
+# Splitting the dataset
+
+
+```{r}
+library(caret)# Automates the tuning process
+
+```
+
+
+
+## Shuffling the rows
+```{r}
+rows <- sample(nrow(addf_d))
+addf_d <- addf_d[rows,]
+
+head(addf_d,10)
+```
+
+## Splitting the data into training and test data
+```{r}
+# Splitting our data
+train_rows = createDataPartition(addf_d$clicked_on_ad,p=0.8,list=FALSE)
+
+# specifying the train and test
+train =addf_d[train_rows,]
+test = addf_d[-train_rows]
+
+# Specifying our x and y
+x = train
+y = train$clicked_on_ad
+
+head(x,5)
+```
+
+
+```{r}
+head(y,5)
+```
+
+# Training the model
+```{r}
+library(randomForest)
+model = randomForest(y ~ ., data = train,importance = TRUE)
+model
+```
+
+
+## Prediction
+```{r}
+pred = predict(model,train, type ="class")
+
+```
+
+## Accuracy 
+```{r}
+mean(pred == train$clicked_on_ad)
+```
+
+
+```{r}
+accuracy = table(pred,train$clicked_on_ad)
+accuracy
+```
+
+
+## Decision trees
+```{r}
+library(rpart)
+library(rpart.plot)
+```
+
+### Model
+```{r}
+model <- rpart(y~ ., data = train,method ="class")
+```
+
+
+Plotting the results
+```{r}
+rpart.plot(model)
+```
+
+### Predictions 
+```{r}
+# train data
+pred <-predict(model,train,type="class")
+table(pred,y)
+```
+
+```{r}
+# on test data
+pred <- predict(model,test,type="class")
+table(pred,test$clicked_on_ad)
+```
+
+# accuracy score
+```{r}
+mean(test$clicked_on_ad == pred)
+```
+
