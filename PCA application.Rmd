@@ -1,0 +1,214 @@
+---
+title: "R Notebook"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+# Business understanding
+Carrefour is a French multinational corporation that specializes in retail.It operates in many countries including UAE,Autralia,Brazil and closer home,Kenya,among many others.
+
+Carrefour is located in 7 major areas in Kenya.
+
+# Business understanding
+You are a Data analyst at Carrefour Kenya and are currently undertaking a project that will inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax). 
+
+# Experimental design
+Your project has been divided into four parts where you'll explore a recent marketing dataset by performing various unsupervised learning techniques and later providing recommendations based on your insights.
+
+Part 1: Dimensionality Reduction
+
+This section of the project entails reducing your dataset to a low dimensional dataset using the t-SNE algorithm or PCA. You will be required to perform your analysis and provide insights gained from your analysis.
+
+Part 2: Feature Selection
+
+This section requires you to perform feature selection through the use of the unsupervised learning methods learned earlier this week. You will be required to perform your analysis and provide insights on the features that contribute the most information to the dataset.
+
+Part 3: Association Rules
+
+This section will require that you create association rules that will allow you to identify relationships between variables in the dataset. You are provided with a separate dataset that comprises groups of items that will be associated with others. Just like in the other sections, you will also be required to provide insights for your analysis.
+
+Part 4: Anomaly Detection
+
+You have also been requested to check whether there are any anomalies in the given sales dataset. The objective of this task being fraud detection.
+
+# Assessing the situation at hand
+## Resources inventory
+### Datasets 
+
+The datasets can be sourced from the following sites
+1.) https://archive.org/download/supermarketdataset1salesdata/Supermarket_Dataset_1%20-%20Sales%20Data.csv
+
+
+2.) https://archive.org/download/supermarketsalesdatasetii/Supermarket_Sales_Dataset%20II.csv
+
+
+3.) https://archive.org/download/supermarketsalesforecastingsales/Supermarket_Sales_Forecasting%20-%20Sales.csv
+
+Software (Github,R)
+
+# Assumptions 
+The data is up to date and relevant.
+# Constraints
+There are no constraints currently.
+
+
+# Loading in our datasets
+```{r}
+library(readr)
+sdf <- read_csv("Supermarket_Dataset_1 - Sales Data.csv")
+View(sdf)
+```
+
+# Data understanding
+Preview of the head of the dataset
+```{r}
+head(sdf,4)
+```
+
+# Preview of tail of the dataset
+```{r}
+tail(sdf,4)
+```
+
+No of columns and obsevations per variable
+```{r}
+dim(sdf)
+```
+The dataset has 1000 observations of 16 variables
+
+# Summary statistics about variables.
+```{r}
+library(skimr)
+skim(sdf)
+```
+
+# Summary of variables
+```{r}
+names(sdf)
+
+```
+
+# Summary of their datatypes
+```{r}
+sapply(sdf,class)
+```
+
+# Data cleaning
+
+```{r}
+library(tidyverse)
+```
+
+## 1.Missing/Null values
+```{r}
+colSums(is.na(sdf))
+```
+From the above summary,we can see that thedataset has no missing values
+
+## 2. Duplicates
+```{r}
+
+sdf_dd<- sdf[duplicated(sdf),]
+
+dim(sdf_dd)
+```
+As we can see, our dataset has no duplicates
+
+## 3. Check for data types
+```{r}
+str(sdf)
+```
+
+## Correct some datatypes
+During our check for datatypes,we noticed that some of the variables have been assigned the wrong datatype.We,therefore correct this.
+In this stage,we will also split the date column to our preferred format.
+
+We change some of the columns with the character datatype to numerical datatype
+```{r}
+sdf$Branch <- as.integer(as.factor(sdf$Branch))
+sdf$`Customer type` <- as.integer(as.factor(sdf$`Customer type`))
+sdf$Gender <- as.integer(as.factor(sdf$Gender))
+sdf$`Product line` <-as.integer(as.factor(sdf$`Product line`))
+sdf$Payment <-as.integer(as.factor(sdf$Payment))
+
+```
+
+We then split the date & time column 
+```{r}
+sdf$Date_Time =  strptime(paste(sdf$Date, sdf$Time), format="%m/%d/%Y %M:%S")
+```
+
+Let's check our dataset once more
+```{r}
+str(sdf)
+```
+
+Remove the unnecesary columns
+```{r}
+sdf <- sdf[,c(-9,-10)]
+names(sdf)
+```
+
+## 4. Check for outliers
+```{r}
+num <- select_if(sdf, is.numeric)# Select numerical columns only
+
+boxplot(num,
+main = "Outliers in Numerical Columns",
+xlab = "Columns",
+col = "maroon",
+border = "pink")
+```
+
+We see some outliers on cogs,Total columns,Tax and Ratings.
+
+# Correlations
+```{r}
+data.num <- sdf[, sapply(sdf, is.numeric)]
+data.cor = cor(data.num)
+
+library(corrplot)
+corrplot(data.cor, type = 'lower')
+```
+
+# Principal Component Analysis
+
+Principal component analysis (PCA) is a method to project data in a higher dimensional space into a lower dimensional space by maximizing the variance of each dimension.
+
+PCA is applied to numerical values only
+
+## Select numeric columns
+
+```{r}
+# Importing the library dplyr
+
+library(dplyr)
+super_num <- select_if(sdf, is.numeric)
+
+```
+
+## Dropping unnecessary
+```{r}
+super_num = super_num[,c(-4,-5,-10)]
+names(super_num)
+```
+
+
+
+```{r}
+super_num.pca <- prcomp(super_num, center = TRUE, scale. = T)
+summary(super_num.pca)
+```
+
+```{r}
+library(DataExplorer)
+plot_prcomp(super_num, variance_cap = 0.9, nrow = 2L, ncol = 2L)
+
+
+```
+
+Each explain a percentate of the total variation of the dataset'
+
+PC1 explains 50% of the total variance
+PC2 explains 64% of the variance and so on.
+By PC7, we have 88% of the total variance explained by the components
