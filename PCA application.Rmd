@@ -1,8 +1,8 @@
 ---
 title: "R Notebook"
 output:
-  pdf_document: default
   html_notebook: default
+  pdf_document: default
 ---
 # Business understanding
 Carrefour is a French multinational corporation that specializes in retail.It operates in many countries including UAE,Autralia,Brazil and closer home,Kenya,among many others.
@@ -36,13 +36,13 @@ You have also been requested to check whether there are any anomalies in the giv
 ### Datasets 
 
 The datasets can be sourced from the following sites
-1.) https://archive.org/download/supermarketdataset1salesdata/Supermarket_Dataset_1%20-%20Sales%20Data.csv
+1.) For Part 1 and 2:https://archive.org/download/supermarketdataset1salesdata/Supermarket_Dataset_1%20-%20Sales%20Data.csv
 
 
-2.) https://archive.org/download/supermarketsalesdatasetii/Supermarket_Sales_Dataset%20II.csv
+2.) For Part 3:https://archive.org/download/supermarketsalesdatasetii/Supermarket_Sales_Dataset%20II.csv
 
 
-3.) https://archive.org/download/supermarketsalesforecastingsales/Supermarket_Sales_Forecasting%20-%20Sales.csv
+3.) For Part 4:https://archive.org/download/supermarketsalesforecastingsales/Supermarket_Sales_Forecasting%20-%20Sales.csv
 
 Software (Github,R)
 
@@ -51,6 +51,11 @@ The data is up to date and relevant.
 # Constraints
 There are no constraints currently.
 
+
+# Part 1: Dimensionality Reduction
+-----
+
+This section of the project entails reducing your dataset to a low dimensional dataset using the t-SNE algorithm or PCA. You will be required to perform your analysis and provide insights gained from your analysis.
 
 # Loading in our datasets
 ```{r}
@@ -133,7 +138,7 @@ sdf$Payment <-as.integer(as.factor(sdf$Payment))
 
 ```
 
-We then split the date & time column 
+We then change the format in the date & time column.
 ```{r}
 sdf$Date_Time =  strptime(paste(sdf$Date, sdf$Time), format="%m/%d/%Y %M:%S")
 ```
@@ -207,8 +212,131 @@ plot_prcomp(super_num, variance_cap = 0.9, nrow = 2L, ncol = 2L)
 
 ```
 
+
 Each explain a percentate of the total variation of the dataset'
 
 PC1 explains 50% of the total variance
 PC2 explains 64% of the variance and so on.
+
+
 By PC7, we have 88% of the total variance explained by the components
+
+# Part 2: Feature Selection
+
+This section requires you to perform feature selection through the use of the unsupervised learning methods learned earlier this week. You will be required to perform your analysis and provide insights on the features that contribute the most information to the dataset.
+
+
+# Reloading the sales dataset
+Due to the many changes that we had carried out earlier,we will reload the previous dataset again to maintain its original state while carrying out feature selection
+```{r}
+library(readr)
+fsdf <- read_csv("Supermarket_Dataset_1 - Sales Data.csv")
+View(fsdf)
+```
+
+When we had explored the dataset earlier we found the dataset had no null values or null values.However,we found out that it had some outliers and some of the variables had been assigned the wrong datatypes.
+
+We,therefore,tweak the dataset to our prefered format.
+
+# Correcting the datatypes
+```{r}
+fsdf$Branch <- as.integer(as.factor(fsdf$Branch))
+fsdf$`Customer type` <- as.integer(as.factor(fsdf$`Customer type`))
+fsdf$Gender <- as.integer(as.factor(fsdf$Gender))
+fsdf$`Product line` <-as.integer(as.factor(fsdf$`Product line`))
+fsdf$Payment <-as.integer(as.factor(fsdf$Payment))
+
+```
+
+We then change the format in the date & time column 
+```{r}
+fsdf$Date_Time =  strptime(paste(fsdf$Date, fsdf$Time), format="%m/%d/%Y %M:%S")
+```
+
+```{r}
+names(fsdf)
+```
+
+## Subsetting the data.
+```{r}
+fsdf_f <- subset( fsdf, select = -c(`Invoice ID`  , Date, Time,Date_Time ) )
+names(fsdf_f)
+```
+
+## Loading required libraries
+```{r}
+library(caret)
+library(corrplot)
+```
+
+
+# Selecting numerical variables with an standadard deviation greater than 0
+```{r}
+# Remove columns with standard deviation of zero
+data.num <- fsdf_f[, sapply(fsdf_f, is.numeric)]
+
+data.num <- data.num[, !sapply(data.num, function(x) { sd(x) == 0} )]
+```
+
+## Correlation matrix
+```{r}
+CM <- cor(data.num)
+CM
+```
+
+# Get variables with high correlation and list them out
+```{r}
+
+H_CM <- findCorrelation(CM, cutoff=0.75)
+names(data.num[,H_CM])
+```
+
+The variables that are highly correlated are cogs,total and tax.
+
+# Plot out of the original numerical variables in comparison to selected ones
+```{r}
+fsdf_fd<-data.num[-H_CM]# Remove highly corelated variabes
+
+par(mfrow = c(1, 2))
+corrplot(CM, order = "hclust")
+corrplot(cor(fsdf_fd), order = "hclust")
+
+```
+
+With feature selection done,we have removed irrelevant and unnecessary variables
+
+# Part 3: Association Rules
+
+This section will require that you create association rules that will allow you to identify relationships between variables in the dataset. You are provided with a separate dataset that comprises groups of items that will be associated with others. Just like in the other sections, you will also be required to provide insights for your analysis.
+
+# Import the neccesary package
+```{r}
+library(arules)
+```
+
+# Loading in our data
+```{r}
+a_df <- read.transactions('http://bit.ly/SupermarketDatasetII',sep = ",")
+```
+
+```{r}
+class(a_df)
+```
+
+##Statistical summary of the data
+```{r}
+summary(a_df)
+```
+
+From the above analysis ,we can see that mineral water leads in sales followed by eggs and so on
+
+## Building a model based on association rules using the apriori function 
+We use Min Support as 0.001 and confidence as 0.8
+
+
+```{r}
+rules <- apriori (a_df, parameter = list(supp = 0.001, conf = 0.8))
+rules
+```
+
+
